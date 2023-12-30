@@ -1,0 +1,45 @@
+import streamlit as st
+import pandas as pd
+import rpy2.robjects as robjects
+from rpy2.robjects import pandas2ri
+
+# Load R script
+robjects.r.source("inventory_analysis.R")
+
+# Function to read data
+@st.cache
+def read_data():
+    # Read your inventory data
+    data = pd.read_csv("inventory_data.csv")
+    return data
+
+# Streamlit app
+def main():
+    st.title("Inventory Management Prototype")
+
+    # Load data
+    data = read_data()
+
+    # Display raw data
+    st.subheader("Raw Data")
+    st.write(data)
+
+    # Sidebar for user input
+    st.sidebar.subheader("Analysis Parameters")
+    start_date = st.sidebar.date_input("Start Date", data["Date"].min())
+    end_date = st.sidebar.date_input("End Date", data["Date"].max())
+
+    # Filter data based on user input
+    filtered_data = data[(data["Date"] >= start_date) & (data["Date"] <= end_date)]
+
+    # Display filtered data
+    st.subheader("Filtered Data")
+    st.write(filtered_data)
+
+    # R analysis results
+    st.subheader("R Analysis Results")
+    result = robjects.r.inventory_analysis(filtered_data)
+    st.write(result)
+
+if __name__ == "__main__":
+    main()
